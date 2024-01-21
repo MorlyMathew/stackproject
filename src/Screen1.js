@@ -7,7 +7,7 @@ const Screen1 = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const navigation = useNavigation();
+ 
   useEffect(() => {
     // Function to fetch data from the API
     const fetchData = async () => {
@@ -36,7 +36,7 @@ const Screen1 = () => {
         }
       } 
       catch (error) {
-          console.error('Error fetching data:', error);
+        
       
           this.setState({loader: false})
           setRefreshing(false);
@@ -91,7 +91,7 @@ const Screen1 = () => {
           }
         } 
         catch (error) {
-            console.error('Error fetching data:', error);
+      
         
             this.setState({loader: false})
             setRefreshing(false);
