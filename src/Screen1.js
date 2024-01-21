@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, ActivityIndicator,RefreshControl, StyleSheet,Alert} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import NetInfo from '@react-native-community/netinfo';
+import { saveApiResponse, getApiResponse, clearApiResponse } from './OfflineStorage';
 const Screen1 = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,38 +12,35 @@ const Screen1 = () => {
     // Function to fetch data from the API
     const fetchData = async () => {
       try {
-        // Set loading to true while fetching data
-        setLoading(true);
-
-        // Replace the URL with your actual API endpoint
         const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
-        const response = await fetch(apiUrl);
-
-        if (!response.ok) {
-          // Handle error if the response is not OK
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        const netInfoState = await NetInfo.fetch();
+        const isOnline = netInfoState.isConnected;
+  
+        if (isOnline) {
+          const response = await fetch(apiUrl);
+          const newData = await response.json();
+          setRefreshing(false);
+          // Save the response to AsyncStorage for offline use
+          saveApiResponse(newData);
+  
+          setData(newData);
+        } else {
+          // Retrieve saved response from AsyncStorage if offline
+          const offlineData = await getApiResponse();
+          setRefreshing(false);
+          if (offlineData) {
+            setData(offlineData);
+          }
+          Alert.alert(" ",
+          "No internet Connection..")
         }
-
-        const result = await response.json();
-        setRefreshing(false);
-        // Set the fetched data to the state
-        setData(result);
-      } catch (error) {
-        // console.error('Error fetching data:', error);
-        Alert.alert(
-          'No Internet Connection',
-          'Please check your internet connection and try again.',
-          [
-            {
-              text: 'Refresh',
-              onPress: fetchData,
-            },
-          ],
-          { cancelable: false }
-        );
-        setRefreshing(false);
-        this.setState({loader: false})
       } 
+      catch (error) {
+          console.error('Error fetching data:', error);
+      
+          this.setState({loader: false})
+          setRefreshing(false);
+        } 
       finally {
         // Set loading to false after data fetching is complete
         setLoading(false);
@@ -63,44 +62,41 @@ const Screen1 = () => {
     setRefreshing(true);
     fetchData()
   };
-  // const fetchdata = () => {
+
    
       // Function to fetch data from the API
       const fetchData = async () => {
         try {
-          // Set loading to true while fetching data
-          setLoading(true);
-  
-          // Replace the URL with your actual API endpoint
           const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
-          const response = await fetch(apiUrl);
-  
-          if (!response.ok) {
-            // Handle error if the response is not OK
-            throw new Error(`HTTP error! Status: ${response.status}`);
+          const netInfoState = await NetInfo.fetch();
+          const isOnline = netInfoState.isConnected;
+    
+          if (isOnline) {
+            const response = await fetch(apiUrl);
+            const newData = await response.json();
+            setRefreshing(false);
+            // Save the response to AsyncStorage for offline use
+            saveApiResponse(newData);
+    
+            setData(newData);
+          } else {
+            // Retrieve saved response from AsyncStorage if offline
+            const offlineData = await getApiResponse();
+            setRefreshing(false);
+            if (offlineData) {
+              setData(offlineData);
+            }
+            Alert.alert(" ",
+            "No internet Connection..")
           }
-  
-          const result = await response.json();
-          setRefreshing(false);
-          // Set the fetched data to the state
-          setData(result);
-        } catch (error) {
-          // console.error('Error fetching data:', error);
-          Alert.alert(
-            'Something Wrong...',
-            'Please check your internet connection and try again.',
-            [
-              {
-                text: 'Refresh',
-                onPress: fetchData,
-              },
-           
-            ],
-            { cancelable: false }
-          );
-          this.setState({loader: false})
-          setRefreshing(false);
-        } finally {
+        } 
+        catch (error) {
+            console.error('Error fetching data:', error);
+        
+            this.setState({loader: false})
+            setRefreshing(false);
+          } 
+        finally {
           // Set loading to false after data fetching is complete
           setLoading(false);
         }
